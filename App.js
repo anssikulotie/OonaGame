@@ -8,7 +8,8 @@ export default function App() {
   const [timerOn, setTimerOn] = useState(false);
   const [gameState, setGameState] = useState('ready');
   const [countdown, setCountdown] = useState(null);
-  
+  let gameResetTimeout;
+
   useEffect(() => {
     let interval = null;
   
@@ -25,6 +26,7 @@ export default function App() {
   
 
   const startGame = () => {
+    clearTimeout(gameResetTimeout);
     // Stop the current game and reset the clock
     setTimerOn(false);
     setTime(0);
@@ -55,7 +57,19 @@ export default function App() {
     } else {
       setGameState('lost');
     }
+  
+    // Set a timeout to reset the game after 10 seconds
+    setTimeout(() => {
+      resetGame();
+    }, 15000); // 10000 milliseconds = 10 seconds
   };
+  
+  const resetGame = () => {
+    setTime(0);
+    setGameState('ready');
+    // Ensure to clear countdown or any other state you need to reset
+  };
+  
   const formatTime = (timeInSeconds) => {
     const seconds = Math.floor(timeInSeconds);
     const milliseconds = Math.floor((timeInSeconds % 1) * 100);  // Get two digits for milliseconds
@@ -69,38 +83,41 @@ export default function App() {
     <>
     <StatusBar hidden={true} />
     <TouchableOpacity style={styles.container} onPress={stopClock} activeOpacity={1}>
-      <ImageBackground source={backgroundImage} style={styles.backgroundImage}>
-        
-        {/* Message container at the top */}
-        <View style={styles.messageContainerTop}>
-          {gameState === 'won' && <Text style={styles.messagewinner}>SUCCESS!</Text>}
-          {gameState === 'lost' && <Text style={styles.messagefailure}>FAILURE</Text>}
-        </View>
-  
-        {/* Message container at the bottom */}
-        {gameState !== 'playing' && (
-          <View style={styles.messageContainerBottom}>
-            <Text style={styles.messageguide}>Tap the screen to stop the clock at 14 seconds!</Text>
-          </View>
-        )}
-  
-        {/* Main content */}
-        <View style={styles.mainContent}>
-          {countdown !== null ? (
-            <Text style={styles.countdownText}>{countdown}</Text>
-          ) : (
-            <>
+    <ImageBackground source={backgroundImage} style={styles.backgroundImage}>
+      
+      {/* Message container at the top */}
+      <View style={styles.messageContainerTop}>
+        {gameState === 'won' && <Text style={styles.messagewinner}>SUCCESS!</Text>}
+        {gameState === 'lost' && <Text style={styles.messagefailure}>FAILURE</Text>}
+      </View>
+
+      {/* Main content */}
+      <View style={styles.mainContent}>
+        {countdown !== null ? (
+          <Text style={styles.countdownText}>{countdown}</Text>
+        ) : (
+          <>
+            {(gameState === 'playing' || gameState === 'won' || gameState === 'lost') && (
               <Text style={styles.clock}>{formatTime(time)}</Text>
-              {gameState !== 'playing' && (
-                <TouchableOpacity onPress={startGame} style={styles.button}>
-                  <Text style={styles.buttonText}>Play</Text>
-                </TouchableOpacity>
-              )}
-            </>
-          )}
+            )}
+            {gameState !== 'playing' && (
+              <TouchableOpacity onPress={startGame} style={styles.button}>
+                <Text style={styles.buttonText}>Play</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </View>
+
+      {/* Message container at the bottom */}
+      {gameState !== 'playing' && (
+        <View style={styles.messageContainerBottom}>
+          <Text style={styles.messageguide}>Tap the Screen to stop the clock at 14 seconds!</Text>
         </View>
-      </ImageBackground>
-    </TouchableOpacity>
+      )}
+
+    </ImageBackground>
+  </TouchableOpacity>
     </>
 
   );
