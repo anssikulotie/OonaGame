@@ -32,7 +32,7 @@ export default function App() {
     clearTimeout(gameResetTimeout.current);
   
     // Reset the clock opacity for a new game
-    clockOpacity.setValue(1); 
+    clockOpacity.setValue(1);
   
     // Reset the game state and start a new game
     setTimerOn(false);
@@ -50,16 +50,17 @@ export default function App() {
         setTimerOn(true);
         setCountdown(null);
         setGameState('playing');
+  
+        // Start fading out the clock as the game starts
+        Animated.timing(clockOpacity, {
+          toValue: 0, // Fade to completely transparent
+          duration: 22000, // Duration of the fade
+          useNativeDriver: true, // Enable native driver for better performance
+        }).start();
       }
     }, 1000);
-  
-    // Start fading out the clock 10 seconds before the game ends
-    Animated.timing(clockOpacity, {
-      toValue: 0, // Fade to completely transparent
-      duration: 25000, // Over 13 seconds
-      useNativeDriver: true, // Enable native driver for better performance
-    }).start();
   };
+  
   
   
   
@@ -141,11 +142,11 @@ export default function App() {
 
 
       {/* Message container at the bottom */}
-      {gameState !== 'playing' && (
+      
         <View style={styles.messageContainerBottom}>
-          <Text style={styles.messageguide}>Tap the Screen to stop the clock at 14 seconds!</Text>
+          <Text style={styles.messageguide}>Tap the Screen to stop the timer at 14 seconds!</Text>
         </View>
-      )}
+      
 
     </ImageBackground>
   </TouchableOpacity>
@@ -204,6 +205,7 @@ const styles = StyleSheet.create({
     fontSize: 35,
     color: 'blue',
     textAlign: 'center',
+    paddingBottom: 20,
   },
   messageContainerTop: {
     position: 'absolute',
