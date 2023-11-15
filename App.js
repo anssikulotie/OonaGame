@@ -1,22 +1,31 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet,StatusBar, Text, View, TouchableOpacity, ImageBackground } from 'react-native';
+import React, { useState, useEffect,useRef  } from 'react';
+import { StyleSheet, StatusBar, Animated, Text, View, TouchableOpacity, ImageBackground } from 'react-native';
 import backgroundImage from './assets/aavamobile.jpg'; 
-
+import { Audio } from 'expo-av';
 
 export default function App() {
+  const clockOpacity = useRef(new Animated.Value(1)).current; // Initial opacity is 1
   const [time, setTime] = useState(0);
   const [timerOn, setTimerOn] = useState(false);
   const [gameState, setGameState] = useState('ready');
   const [countdown, setCountdown] = useState(null);
-  let gameResetTimeout;
+  const [playCount, setPlayCount] = useState(0);
+  const gameResetTimeout = useRef(null);
 
+  async function playSound(soundFile) {
+    const { sound } = await Audio.Sound.createAsync(
+      soundFile
+    );
+    await sound.playAsync();
+  }
+  
   useEffect(() => {
     let interval = null;
   
     if (timerOn) {
       interval = setInterval(() => {
-        setTime(prevTime => prevTime + 0.1); // increment time
-      }, 100);
+        setTime(prevTime => prevTime + 0.01); // increment time
+      }, 10);
     } else {
       clearInterval(interval);
     }
@@ -26,8 +35,16 @@ export default function App() {
   
 
   const startGame = () => {
-    clearTimeout(gameResetTimeout);
-    // Stop the current game and reset the clock
+    // Increment the play count
+    setPlayCount(prevCount => prevCount + 1);
+
+    // Clear any existing timeout to reset the game
+    clearTimeout(gameResetTimeout.current);
+  
+    // Reset the clock opacity for a new game
+    clockOpacity.setValue(1);
+  
+    // Reset the game state and start a new game
     setTimerOn(false);
     setTime(0);
     setGameState('ready');
@@ -43,6 +60,13 @@ export default function App() {
         setTimerOn(true);
         setCountdown(null);
         setGameState('playing');
+  
+        // Start fading out the clock as the game starts
+        Animated.timing(clockOpacity, {
+          toValue: 0, // Fade to completely transparent
+          duration: 24000, // Duration of the fade
+          useNativeDriver: true, // Enable native driver for better performance
+        }).start();
       }
     }, 1000);
   };
@@ -50,24 +74,38 @@ export default function App() {
   
   
   
-  const stopClock = () => {
+  
+  const stopClock = async () => {
     setTimerOn(false);
-    if (time >= 13.99 && time <= 14.01) {
+  
+    if (time === 14.00) {
       setGameState('won');
+      await playSound(require('./assets/sounds/winSound.mp3'));
     } else {
       setGameState('lost');
+      await playSound(require('./assets/sounds/loseSound.mp3'));
     }
+    
+      // Stop the fading animation and reset opacity
+      clockOpacity.stopAnimation();
+      clockOpacity.setValue(1);
+    
+      // Set a timeout to reset the game after 10 seconds
+      gameResetTimeout.current = setTimeout(() => {
+        resetGame();
+      }, 10000); // 10000 milliseconds = 10 seconds
+    };
   
-    // Set a timeout to reset the game after 10 seconds
-    setTimeout(() => {
-      resetGame();
-    }, 15000); // 10000 milliseconds = 10 seconds
-  };
+  
+
+  
   
   const resetGame = () => {
     setTime(0);
     setGameState('ready');
+    clockOpacity.setValue(1); // Ensure the clock is visible again for the next game
     // Ensure to clear countdown or any other state you need to reset
+    gameResetTimeout.current = null;
   };
   
   const formatTime = (timeInSeconds) => {
@@ -77,12 +115,19 @@ export default function App() {
     return `${seconds < 10 ? '0' : ''}${seconds}:${milliseconds < 10 ? '0' : ''}${milliseconds}`;
   };
   
+  const resetPlayCount = () => {
+    setPlayCount(0);
+  };
   
   
   return (
     <>
     <StatusBar hidden={true} />
-    <TouchableOpacity style={styles.container} onPress={stopClock} activeOpacity={1}>
+    <TouchableOpacity style={styles.container} onPress={() => {
+    if (gameState === 'playing') {
+      stopClock();
+    }
+  }} activeOpacity={1}>
     <ImageBackground source={backgroundImage} style={styles.backgroundImage}>
       
       {/* Message container at the top */}
@@ -91,30 +136,48 @@ export default function App() {
         {gameState === 'lost' && <Text style={styles.messagefailure}>FAILURE</Text>}
       </View>
 
-      {/* Main content */}
-      <View style={styles.mainContent}>
-        {countdown !== null ? (
-          <Text style={styles.countdownText}>{countdown}</Text>
-        ) : (
-          <>
-            {(gameState === 'playing' || gameState === 'won' || gameState === 'lost') && (
-              <Text style={styles.clock}>{formatTime(time)}</Text>
-            )}
-            {gameState !== 'playing' && (
-              <TouchableOpacity onPress={startGame} style={styles.button}>
-                <Text style={styles.buttonText}>Play</Text>
-              </TouchableOpacity>
-            )}
-          </>
-        )}
-      </View>
+<View style={styles.messageContainerBottoms}>
+  {gameState !== 'playing' && (
+    <>
+      {/* Display the number of games played */}
+      <Text style={styles.playCounter}>Games Played: {playCount}</Text>
+
+      {/* Reset button */}
+      <TouchableOpacity onPress={resetPlayCount} style={styles.counterResetButton}>
+        <Text style={styles.resetButtonText}>Reset</Text>
+      </TouchableOpacity>
+    </>
+  )}
+</View>
+
+
+{/* Main content */}
+<View style={styles.mainContent}>
+  {countdown !== null ? (
+    <Text style={styles.countdownText}>{countdown}</Text>
+  ) : (
+    <>
+      {(gameState === 'playing' || gameState === 'won' || gameState === 'lost') && (
+        <Animated.Text style={[styles.clock, { opacity: clockOpacity }]}>
+          {formatTime(time)}
+        </Animated.Text>
+      )}
+      {gameState !== 'playing' && (
+        <TouchableOpacity onPress={startGame} style={styles.button}>
+          <Text style={styles.buttonText}>Play</Text>
+        </TouchableOpacity>
+      )}
+    </>
+  )}
+</View>
+
 
       {/* Message container at the bottom */}
-      {gameState !== 'playing' && (
+      
         <View style={styles.messageContainerBottom}>
-          <Text style={styles.messageguide}>Tap the Screen to stop the clock at 14 seconds!</Text>
+          <Text style={styles.messageguide}>Tap the Screen to stop the Timer at 14:00!</Text>
         </View>
-      )}
+      
 
     </ImageBackground>
   </TouchableOpacity>
@@ -147,7 +210,7 @@ const styles = StyleSheet.create({
   clock: {
     fontSize: 80,
     marginBottom: 30,
-    backgroundColor: 'rgba(0, 0, 0, 0.01)', // Semi-transparent black background
+    backgroundColor: 'rgba(0, 0, 0, 0.001)', // Semi-transparent black background
     color: 'black', // White color for the text
     paddingHorizontal: 20, // Horizontal padding
     paddingVertical: 10, // Vertical padding
@@ -168,11 +231,18 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
-
+  messageContainerBottoms: {
+    position: 'absolute',
+    bottom: 20, // Place the container 20 pixels from the bottom
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
   messageguide: {
     fontSize: 35,
     color: 'blue',
     textAlign: 'center',
+    paddingBottom: 20,
   },
   messageContainerTop: {
     position: 'absolute',
@@ -203,4 +273,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  playCounter: {
+    position: 'absolute',
+    bottom: -10,  // Position at the bottom
+    right: 25,   // Position at the right corner
+    fontSize: 18, // Tiny text
+    color: 'gray', // You can choose a suitable color
+  },
+  counterResetButton: {
+    position: 'absolute',
+    bottom: -20,
+    right: 5,
+    fontSize: 8,
+    fontcolor: 'gray',
+  },
+  resetButtonText: {
+    fontSize: 5, // Adjust the font size as needed
+    color: 'white', // Choose a suitable text color
+  },
+
+
 });
