@@ -10,7 +10,7 @@ export default function App() {
   const [gameState, setGameState] = useState('ready');
   const [countdown, setCountdown] = useState(null);
   
-  let gameResetTimeout;
+  const gameResetTimeout = useRef(null);
 
   useEffect(() => {
     let interval = null;
@@ -28,9 +28,13 @@ export default function App() {
   
 
   const startGame = () => {
-    clockOpacity.setValue(1); // Reset the opacity
-    clearTimeout(gameResetTimeout);
-    // Stop the current game and reset the clock
+    // Clear any existing timeout to reset the game
+    clearTimeout(gameResetTimeout.current);
+  
+    // Reset the clock opacity for a new game
+    clockOpacity.setValue(1); 
+  
+    // Reset the game state and start a new game
     setTimerOn(false);
     setTime(0);
     setGameState('ready');
@@ -48,6 +52,7 @@ export default function App() {
         setGameState('playing');
       }
     }, 1000);
+  
     // Start fading out the clock 10 seconds before the game ends
     Animated.timing(clockOpacity, {
       toValue: 0, // Fade to completely transparent
@@ -72,7 +77,7 @@ export default function App() {
     clockOpacity.setValue(1);
   
     // Set a timeout to reset the game after 10 seconds
-    gameResetTimeout = setTimeout(() => {
+    gameResetTimeout.current = setTimeout(() => {
       resetGame();
     }, 10000); // 10000 milliseconds = 10 seconds
   };
@@ -86,6 +91,7 @@ export default function App() {
     setGameState('ready');
     clockOpacity.setValue(1); // Ensure the clock is visible again for the next game
     // Ensure to clear countdown or any other state you need to reset
+    gameResetTimeout.current = null;
   };
   
   const formatTime = (timeInSeconds) => {
