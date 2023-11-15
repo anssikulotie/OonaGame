@@ -9,7 +9,7 @@ export default function App() {
   const [timerOn, setTimerOn] = useState(false);
   const [gameState, setGameState] = useState('ready');
   const [countdown, setCountdown] = useState(null);
-  
+  const [playCount, setPlayCount] = useState(0);
   const gameResetTimeout = useRef(null);
 
   useEffect(() => {
@@ -28,6 +28,9 @@ export default function App() {
   
 
   const startGame = () => {
+    // Increment the play count
+    setPlayCount(prevCount => prevCount + 1);
+
     // Clear any existing timeout to reset the game
     clearTimeout(gameResetTimeout.current);
   
@@ -102,6 +105,9 @@ export default function App() {
     return `${seconds < 10 ? '0' : ''}${seconds}:${milliseconds < 10 ? '0' : ''}${milliseconds}`;
   };
   
+  const resetPlayCount = () => {
+    setPlayCount(0);
+  };
   
   
   return (
@@ -119,6 +125,23 @@ export default function App() {
         {gameState === 'won' && <Text style={styles.messagewinner}>SUCCESS!</Text>}
         {gameState === 'lost' && <Text style={styles.messagefailure}>FAILURE</Text>}
       </View>
+      <View style={styles.messageContainerBottom}>
+  <Text style={styles.messageguide}>Tap the Screen to stop the timer at 14 seconds!</Text>
+</View>
+<View style={styles.messageContainerBottoms}>
+  {gameState !== 'playing' && (
+    <>
+      {/* Display the number of games played */}
+      <Text style={styles.playCounter}>Games Played: {playCount}</Text>
+
+      {/* Reset button */}
+      <TouchableOpacity onPress={resetPlayCount} style={styles.counterResetButton}>
+        <Text style={styles.resetButtonText}>Reset</Text>
+      </TouchableOpacity>
+    </>
+  )}
+</View>
+
 
 {/* Main content */}
 <View style={styles.mainContent}>
@@ -200,7 +223,13 @@ const styles = StyleSheet.create({
     right: 0,
     alignItems: 'center',
   },
-
+  messageContainerBottoms: {
+    position: 'absolute',
+    bottom: 20, // Place the container 20 pixels from the bottom
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
   messageguide: {
     fontSize: 35,
     color: 'blue',
@@ -236,4 +265,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  playCounter: {
+    position: 'absolute',
+    bottom: -10,  // Position at the bottom
+    right: 25,   // Position at the right corner
+    fontSize: 18, // Tiny text
+    color: 'gray', // You can choose a suitable color
+  },
+  counterResetButton: {
+    position: 'absolute',
+    bottom: -20,
+    right: 5,
+    fontSize: 8,
+    fontcolor: 'gray',
+  },
+  resetButtonText: {
+    fontSize: 5, // Adjust the font size as needed
+    color: 'white', // Choose a suitable text color
+  },
+
+
 });
