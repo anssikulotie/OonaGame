@@ -1,7 +1,7 @@
 import React, { useState, useEffect,useRef  } from 'react';
 import { StyleSheet, StatusBar, Animated, Text, View, TouchableOpacity, ImageBackground } from 'react-native';
 import backgroundImage from './assets/aavamobile.jpg'; 
-
+import { Audio } from 'expo-av';
 
 export default function App() {
   const clockOpacity = useRef(new Animated.Value(1)).current; // Initial opacity is 1
@@ -12,6 +12,13 @@ export default function App() {
   const [playCount, setPlayCount] = useState(0);
   const gameResetTimeout = useRef(null);
 
+  async function playSound(soundFile) {
+    const { sound } = await Audio.Sound.createAsync(
+      soundFile
+    );
+    await sound.playAsync();
+  }
+  
   useEffect(() => {
     let interval = null;
   
@@ -57,7 +64,7 @@ export default function App() {
         // Start fading out the clock as the game starts
         Animated.timing(clockOpacity, {
           toValue: 0, // Fade to completely transparent
-          duration: 22000, // Duration of the fade
+          duration: 24000, // Duration of the fade
           useNativeDriver: true, // Enable native driver for better performance
         }).start();
       }
@@ -68,26 +75,29 @@ export default function App() {
   
   
   
-  const stopClock = () => {
+  const stopClock = async () => {
     setTimerOn(false);
-    if (time >= 13.99 && time <= 14.01) {
+  
+    if (time === 14.00) {
       setGameState('won');
+      await playSound(require('./assets/sounds/winSound.mp3'));
     } else {
       setGameState('lost');
+      await playSound(require('./assets/sounds/loseSound.mp3'));
     }
+    
+      // Stop the fading animation and reset opacity
+      clockOpacity.stopAnimation();
+      clockOpacity.setValue(1);
+    
+      // Set a timeout to reset the game after 10 seconds
+      gameResetTimeout.current = setTimeout(() => {
+        resetGame();
+      }, 10000); // 10000 milliseconds = 10 seconds
+    };
   
-    // Stop the fading animation and reset opacity
-    clockOpacity.stopAnimation();
-    clockOpacity.setValue(1);
   
-    // Set a timeout to reset the game after 10 seconds
-    gameResetTimeout.current = setTimeout(() => {
-      resetGame();
-    }, 10000); // 10000 milliseconds = 10 seconds
-  };
-  
-  
-  
+
   
   
   const resetGame = () => {
@@ -125,9 +135,7 @@ export default function App() {
         {gameState === 'won' && <Text style={styles.messagewinner}>SUCCESS!</Text>}
         {gameState === 'lost' && <Text style={styles.messagefailure}>FAILURE</Text>}
       </View>
-      <View style={styles.messageContainerBottom}>
-  <Text style={styles.messageguide}>Tap the Screen to stop the timer at 14 seconds!</Text>
-</View>
+
 <View style={styles.messageContainerBottoms}>
   {gameState !== 'playing' && (
     <>
@@ -167,7 +175,7 @@ export default function App() {
       {/* Message container at the bottom */}
       
         <View style={styles.messageContainerBottom}>
-          <Text style={styles.messageguide}>Tap the Screen to stop the timer at 14 seconds!</Text>
+          <Text style={styles.messageguide}>Tap the Screen to stop the Timer at 14:00!</Text>
         </View>
       
 
