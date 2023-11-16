@@ -13,7 +13,7 @@ OonaGame is a React Native mobile app game where players are tasked with stoppin
 - Intuitive Design: The app boasts a user-friendly interface with clear instructions, making it accessible and enjoyable for players of all ages.
 
 ## How to Play
-- Press 'Play' to initiate the game.
+- Tap the screen to start the game.
 - Wait for the 3-second countdown.
 - Tap the screen to stop the timer as close to 14:00 as possible.
 - Watch for the win or loss message and challenge yourself again!
