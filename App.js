@@ -18,11 +18,15 @@ export default function App() {
 
 
   async function playSound(soundFile) {
-    const { sound } = await Audio.Sound.createAsync(
-      soundFile
-    );
+    const { sound } = await Audio.Sound.createAsync(soundFile);
     await sound.playAsync();
+    sound.setOnPlaybackStatusUpdate(async (status) => {
+      if (status.didJustFinish) {
+        await sound.unloadAsync();
+      }
+    });
   }
+  
   const updatePlayCount = async (newCount) => {
     setPlayCount(newCount);
     await AsyncStorage.setItem('playCount', JSON.stringify(newCount));
@@ -95,7 +99,7 @@ export default function App() {
         // Start fading out the clock as the game starts
         Animated.timing(clockOpacity, {
           toValue: 0, // Fade to completely transparent
-          duration: 24000, // Duration of the fade
+          duration: 23000, // Duration of the fade
           useNativeDriver: true, // Enable native driver for better performance
         }).start();
       }
@@ -109,25 +113,28 @@ export default function App() {
   const stopClock = async () => {
     setTimerOn(false);
   
-    if (time === 14.00) {
+    // Check if the time is within the hidden tolerance range
+    if (time >= 13.95 && time <= 14.05) {
       setGameState('won');
       updateWinCount(winCount + 1);
       await playSound(require('./assets/sounds/winSound.mp3'));
-      
+      setTime(14.00); // Display 14:00 regardless of actual stop time
     } else {
       setGameState('lost');
       await playSound(require('./assets/sounds/loseSound.mp3'));
+      // The actual time is displayed, so no change is needed
     }
     
-      // Stop the fading animation and reset opacity
-      clockOpacity.stopAnimation();
-      clockOpacity.setValue(1);
-    
-      // Set a timeout to reset the game after 10 seconds
-      gameResetTimeout.current = setTimeout(() => {
-        resetGame();
-      }, 10000); // 10000 milliseconds = 10 seconds
-    };
+    // Stop the fading animation and reset opacity
+    clockOpacity.stopAnimation();
+    clockOpacity.setValue(1);
+  
+    // Set a timeout to reset the game after 10 seconds
+    gameResetTimeout.current = setTimeout(() => {
+      resetGame();
+    }, 10000); // 10000 milliseconds = 10 seconds
+  };
+  
   
   
 
@@ -189,7 +196,7 @@ export default function App() {
 
       {/* Reset button */}
       <TouchableOpacity onPress={resetPlayCount} style={styles.counterResetButton}>
-        <Text style={styles.resetButtonText}>Reset</Text>
+      <Text style={styles.resetButtonText}>Reset{"\n"}Counter</Text>
       </TouchableOpacity>
     </>
   )}
@@ -282,7 +289,7 @@ const styles = StyleSheet.create({
     fontSize: 35,
     color: 'blue',
     textAlign: 'center',
-    paddingBottom: 20,
+    paddingBottom: 50,
   },
   messageContainerTop: {
     position: 'absolute',
@@ -315,29 +322,33 @@ const styles = StyleSheet.create({
   },
   playCounter: {
     position: 'absolute',
-    bottom: -10,  // Position at the bottom
-    right: 25,   // Position at the right corner
+    textAlign: 'center',
+    bottom: 10, // Position at the bottom
     fontSize: 18, // Tiny text
-    color: 'gray', // You can choose a suitable color
+    color: 'black',
   },
+  
+  winCounter: {
+    position: 'absolute',
+    bottom: -10, // Position at the bottom
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'black',
+  },
+  
   counterResetButton: {
     position: 'absolute',
     bottom: -20,
     right: 5,
-    fontSize: 8,
-    fontcolor: 'gray',
+    padding: 5, // Adjust padding as needed for better touch area
+    backgroundColor: 'transparent', // Or any color you prefer
   },
+  
   resetButtonText: {
-    fontSize: 5, // Adjust the font size as needed
-    color: 'white', // Choose a suitable text color
+    fontSize: 6, // Adjust the font size as needed
+    color: 'white',
   },
-  winCounter: {
-    position: 'absolute',
-    bottom: -10, // Adjust position as needed
-    right: 605,
-    fontSize: 18,
-    color: 'gray',
-  },
+  
 
 
 });
