@@ -99,7 +99,7 @@ export default function App() {
         // Start fading out the clock as the game starts
         Animated.timing(clockOpacity, {
           toValue: 0, // Fade to completely transparent
-          duration: 24000, // Duration of the fade
+          duration: 23000, // Duration of the fade
           useNativeDriver: true, // Enable native driver for better performance
         }).start();
       }
@@ -113,28 +113,28 @@ export default function App() {
   const stopClock = async () => {
     setTimerOn(false);
   
-    // Using a narrow range around 14.00
-    if (time >= 13.195 && time <= 14.005) {
+    // Check if the time is within the hidden tolerance range
+    if (time >= 13.95 && time <= 14.05) {
       setGameState('won');
       updateWinCount(winCount + 1);
       await playSound(require('./assets/sounds/winSound.mp3'));
+      setTime(14.00); // Display 14:00 regardless of actual stop time
     } else {
       setGameState('lost');
       await playSound(require('./assets/sounds/loseSound.mp3'));
+      // The actual time is displayed, so no change is needed
     }
     
-
+    // Stop the fading animation and reset opacity
+    clockOpacity.stopAnimation();
+    clockOpacity.setValue(1);
   
-    
-      // Stop the fading animation and reset opacity
-      clockOpacity.stopAnimation();
-      clockOpacity.setValue(1);
-    
-      // Set a timeout to reset the game after 10 seconds
-      gameResetTimeout.current = setTimeout(() => {
-        resetGame();
-      }, 10000); // 10000 milliseconds = 10 seconds
-    };
+    // Set a timeout to reset the game after 10 seconds
+    gameResetTimeout.current = setTimeout(() => {
+      resetGame();
+    }, 10000); // 10000 milliseconds = 10 seconds
+  };
+  
   
   
 
