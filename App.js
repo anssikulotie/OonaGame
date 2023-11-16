@@ -18,11 +18,15 @@ export default function App() {
 
 
   async function playSound(soundFile) {
-    const { sound } = await Audio.Sound.createAsync(
-      soundFile
-    );
+    const { sound } = await Audio.Sound.createAsync(soundFile);
     await sound.playAsync();
+    sound.setOnPlaybackStatusUpdate(async (status) => {
+      if (status.didJustFinish) {
+        await sound.unloadAsync();
+      }
+    });
   }
+  
   const updatePlayCount = async (newCount) => {
     setPlayCount(newCount);
     await AsyncStorage.setItem('playCount', JSON.stringify(newCount));
@@ -109,15 +113,18 @@ export default function App() {
   const stopClock = async () => {
     setTimerOn(false);
   
-    if (time === 14.00) {
+    // Using a narrow range around 14.00
+    if (time >= 13.195 && time <= 14.005) {
       setGameState('won');
       updateWinCount(winCount + 1);
       await playSound(require('./assets/sounds/winSound.mp3'));
-      
     } else {
       setGameState('lost');
       await playSound(require('./assets/sounds/loseSound.mp3'));
     }
+    
+
+  
     
       // Stop the fading animation and reset opacity
       clockOpacity.stopAnimation();
@@ -189,7 +196,7 @@ export default function App() {
 
       {/* Reset button */}
       <TouchableOpacity onPress={resetPlayCount} style={styles.counterResetButton}>
-        <Text style={styles.resetButtonText}>Reset</Text>
+      <Text style={styles.resetButtonText}>Reset{"\n"}Counter</Text>
       </TouchableOpacity>
     </>
   )}
@@ -282,7 +289,7 @@ const styles = StyleSheet.create({
     fontSize: 35,
     color: 'blue',
     textAlign: 'center',
-    paddingBottom: 20,
+    paddingBottom: 50,
   },
   messageContainerTop: {
     position: 'absolute',
@@ -315,29 +322,33 @@ const styles = StyleSheet.create({
   },
   playCounter: {
     position: 'absolute',
-    bottom: -10,  // Position at the bottom
-    right: 25,   // Position at the right corner
+    textAlign: 'center',
+    bottom: 10, // Position at the bottom
     fontSize: 18, // Tiny text
-    color: 'gray', // You can choose a suitable color
+    color: 'black',
   },
+  
+  winCounter: {
+    position: 'absolute',
+    bottom: -10, // Position at the bottom
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'black',
+  },
+  
   counterResetButton: {
     position: 'absolute',
     bottom: -20,
     right: 5,
-    fontSize: 8,
-    fontcolor: 'gray',
+    padding: 5, // Adjust padding as needed for better touch area
+    backgroundColor: 'transparent', // Or any color you prefer
   },
+  
   resetButtonText: {
-    fontSize: 5, // Adjust the font size as needed
-    color: 'white', // Choose a suitable text color
+    fontSize: 6, // Adjust the font size as needed
+    color: 'white',
   },
-  winCounter: {
-    position: 'absolute',
-    bottom: -10, // Adjust position as needed
-    right: 605,
-    fontSize: 18,
-    color: 'gray',
-  },
+  
 
 
 });
