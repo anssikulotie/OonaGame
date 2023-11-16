@@ -1,10 +1,12 @@
+//import necessary modules
+
 import React, { useState, useEffect,useRef  } from 'react';
 import { StyleSheet, StatusBar, Animated, Text, View, TouchableOpacity, ImageBackground } from 'react-native';
 import backgroundImage from './assets/aavamobile.jpg'; 
 import { Audio } from 'expo-av';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
+//define the App function and variables 
 export default function App() {
   const clockOpacity = useRef(new Animated.Value(1)).current; // Initial opacity is 1
   const [time, setTime] = useState(0);
@@ -16,7 +18,7 @@ export default function App() {
   const [winCount, setWinCount] = useState(0);
   const [lastTouch, setLastTouch] = useState(0);
 
-
+//define the playSound function to play the sound files
   async function playSound(soundFile) {
     const { sound } = await Audio.Sound.createAsync(soundFile);
     await sound.playAsync();
@@ -26,17 +28,17 @@ export default function App() {
       }
     });
   }
-  
+  //define the updatePlayCount and updateWinCount functions to update the playCount and winCount variables
   const updatePlayCount = async (newCount) => {
     setPlayCount(newCount);
     await AsyncStorage.setItem('playCount', JSON.stringify(newCount));
   };
   
   const updateWinCount = async (newCount) => {
-    // Assuming you have a state for winCount
     setWinCount(newCount);
     await AsyncStorage.setItem('winCount', JSON.stringify(newCount));
   };
+  //define the useEffect function to load the playCount and winCount variables from the AsyncStorage
   useEffect(() => {
     const loadCounts = async () => {
       const savedPlayCount = await AsyncStorage.getItem('playCount');
@@ -53,7 +55,7 @@ export default function App() {
   
     loadCounts();
   }, []);
-  
+  //define the useEffect function to update the time variable
   useEffect(() => {
     let interval = null;
   
@@ -68,7 +70,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, [timerOn]);
   
-
+//define the startGame function to start the game
   const startGame = () => {
     // Increment the play count
     updatePlayCount(playCount + 1);
@@ -99,7 +101,7 @@ export default function App() {
         // Start fading out the clock as the game starts
         Animated.timing(clockOpacity, {
           toValue: 0, // Fade to completely transparent
-          duration: 23000, // Duration of the fade
+          duration: 23000, // Duration of the fade 23 real time seconds
           useNativeDriver: true, // Enable native driver for better performance
         }).start();
       }
@@ -109,7 +111,7 @@ export default function App() {
   
   
   
-  
+  //define the stopClock function to stop the clock
   const stopClock = async () => {
     setTimerOn(false);
   
@@ -122,7 +124,7 @@ export default function App() {
     } else {
       setGameState('lost');
       await playSound(require('./assets/sounds/loseSound.mp3'));
-      // The actual time is displayed, so no change is needed
+      // Display the actual stop time if the player loses
     }
     
     // Stop the fading animation and reset opacity
@@ -139,7 +141,7 @@ export default function App() {
   
 
   
-  
+  //define the resetGame function to reset the game automatically if not reset by the player
   const resetGame = () => {
     setTime(0);
     setGameState('ready');
@@ -147,19 +149,19 @@ export default function App() {
     // Ensure to clear countdown or any other state you need to reset
     gameResetTimeout.current = null;
   };
-  
+  //define the formatTime function to format the time variable to display in the clock
   const formatTime = (timeInSeconds) => {
     const seconds = Math.floor(timeInSeconds);
     const milliseconds = Math.floor((timeInSeconds % 1) * 100);  // Get two digits for milliseconds
   
     return `${seconds < 10 ? '0' : ''}${seconds}:${milliseconds < 10 ? '0' : ''}${milliseconds}`;
   };
-  
+  //define the resetPlayCount function to reset the playCount counter
   const resetPlayCount = () => {
     setPlayCount(0);
   };
   
-  
+  //define the return function to return the JSX code
   return (
     <>
     <StatusBar hidden={true} />
@@ -167,7 +169,7 @@ export default function App() {
   style={styles.container} 
   onPress={() => {
     const now = Date.now();
-    if (now - lastTouch > 4000) { // Debounce period of 500 milliseconds
+    if (now - lastTouch > 4000) { // Debounce touch period of 4000 milliseconds to prevent accidental taps
       setLastTouch(now);
 
       if (gameState === 'playing') {
@@ -186,7 +188,7 @@ export default function App() {
         {gameState === 'won' && <Text style={styles.messagewinner}>SUCCESS!</Text>}
         {gameState === 'lost' && <Text style={styles.messagefailure}>FAILURE</Text>}
       </View>
-
+{/* Message container at the bottom, hidden when game is running */}
 <View style={styles.messageContainerBottoms}>
   {gameState !== 'playing' && (
     <>
@@ -194,7 +196,7 @@ export default function App() {
       <Text style={styles.playCounter}>Games Played: {playCount}</Text>
       <Text style={styles.winCounter}>Games Won: {winCount}</Text> 
 
-      {/* Reset button */}
+      {/* Reset counter button */}
       <TouchableOpacity onPress={resetPlayCount} style={styles.counterResetButton}>
       <Text style={styles.resetButtonText}>Reset{"\n"}Counter</Text>
       </TouchableOpacity>
@@ -219,7 +221,7 @@ export default function App() {
 </View>
 
 
-      {/* Message container at the bottom */}
+      {/* Message container at the bottom, containing the main objective */}
       
         <View style={styles.messageContainerBottom}>
           <Text style={styles.messageguide}>Tap the Screen to stop the Timer at 14:00!</Text>
@@ -316,21 +318,20 @@ const styles = StyleSheet.create({
   alignItems: 'center',
   },
   mainContent: {
-    // Adjust layout as needed
     alignItems: 'center',
     justifyContent: 'center',
   },
   playCounter: {
     position: 'absolute',
     textAlign: 'center',
-    bottom: 10, // Position at the bottom
-    fontSize: 18, // Tiny text
+    bottom: 10, 
+    fontSize: 18, 
     color: 'black',
   },
   
   winCounter: {
     position: 'absolute',
-    bottom: -10, // Position at the bottom
+    bottom: -10, 
     textAlign: 'center',
     fontSize: 18,
     color: 'black',
@@ -340,12 +341,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -20,
     right: 5,
-    padding: 5, // Adjust padding as needed for better touch area
-    backgroundColor: 'transparent', // Or any color you prefer
+    padding: 5, 
+    backgroundColor: 'transparent', 
   },
   
   resetButtonText: {
-    fontSize: 6, // Adjust the font size as needed
+    fontSize: 6, 
     color: 'white',
   },
   
