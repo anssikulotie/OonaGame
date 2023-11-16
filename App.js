@@ -2,6 +2,8 @@ import React, { useState, useEffect,useRef  } from 'react';
 import { StyleSheet, StatusBar, Animated, Text, View, TouchableOpacity, ImageBackground } from 'react-native';
 import backgroundImage from './assets/aavamobile.jpg'; 
 import { Audio } from 'expo-av';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function App() {
   const clockOpacity = useRef(new Animated.Value(1)).current; // Initial opacity is 1
@@ -11,6 +13,9 @@ export default function App() {
   const [countdown, setCountdown] = useState(null);
   const [playCount, setPlayCount] = useState(0);
   const gameResetTimeout = useRef(null);
+  const [winCount, setWinCount] = useState(0);
+  const [lastTouch, setLastTouch] = useState(0);
+
 
   async function playSound(soundFile) {
     const { sound } = await Audio.Sound.createAsync(
@@ -18,6 +23,32 @@ export default function App() {
     );
     await sound.playAsync();
   }
+  const updatePlayCount = async (newCount) => {
+    setPlayCount(newCount);
+    await AsyncStorage.setItem('playCount', JSON.stringify(newCount));
+  };
+  
+  const updateWinCount = async (newCount) => {
+    // Assuming you have a state for winCount
+    setWinCount(newCount);
+    await AsyncStorage.setItem('winCount', JSON.stringify(newCount));
+  };
+  useEffect(() => {
+    const loadCounts = async () => {
+      const savedPlayCount = await AsyncStorage.getItem('playCount');
+      const savedWinCount = await AsyncStorage.getItem('winCount');
+  
+      if (savedPlayCount !== null) {
+        setPlayCount(JSON.parse(savedPlayCount));
+      }
+  
+      if (savedWinCount !== null) {
+        setWinCount(JSON.parse(savedWinCount));
+      }
+    };
+  
+    loadCounts();
+  }, []);
   
   useEffect(() => {
     let interval = null;
@@ -36,7 +67,7 @@ export default function App() {
 
   const startGame = () => {
     // Increment the play count
-    setPlayCount(prevCount => prevCount + 1);
+    updatePlayCount(playCount + 1);
 
     // Clear any existing timeout to reset the game
     clearTimeout(gameResetTimeout.current);
@@ -80,7 +111,9 @@ export default function App() {
   
     if (time === 14.00) {
       setGameState('won');
+      updateWinCount(winCount + 1);
       await playSound(require('./assets/sounds/winSound.mp3'));
+      
     } else {
       setGameState('lost');
       await playSound(require('./assets/sounds/loseSound.mp3'));
@@ -123,11 +156,22 @@ export default function App() {
   return (
     <>
     <StatusBar hidden={true} />
-    <TouchableOpacity style={styles.container} onPress={() => {
-    if (gameState === 'playing') {
-      stopClock();
+    <TouchableOpacity 
+  style={styles.container} 
+  onPress={() => {
+    const now = Date.now();
+    if (now - lastTouch > 4000) { // Debounce period of 500 milliseconds
+      setLastTouch(now);
+
+      if (gameState === 'playing') {
+        stopClock();
+      } else {
+        startGame();
+      }
     }
-  }} activeOpacity={1}>
+  }} 
+  activeOpacity={1}
+>
     <ImageBackground source={backgroundImage} style={styles.backgroundImage}>
       
       {/* Message container at the top */}
@@ -141,6 +185,7 @@ export default function App() {
     <>
       {/* Display the number of games played */}
       <Text style={styles.playCounter}>Games Played: {playCount}</Text>
+      <Text style={styles.winCounter}>Games Won: {winCount}</Text> 
 
       {/* Reset button */}
       <TouchableOpacity onPress={resetPlayCount} style={styles.counterResetButton}>
@@ -161,11 +206,6 @@ export default function App() {
         <Animated.Text style={[styles.clock, { opacity: clockOpacity }]}>
           {formatTime(time)}
         </Animated.Text>
-      )}
-      {gameState !== 'playing' && (
-        <TouchableOpacity onPress={startGame} style={styles.button}>
-          <Text style={styles.buttonText}>Play</Text>
-        </TouchableOpacity>
       )}
     </>
   )}
@@ -290,6 +330,13 @@ const styles = StyleSheet.create({
   resetButtonText: {
     fontSize: 5, // Adjust the font size as needed
     color: 'white', // Choose a suitable text color
+  },
+  winCounter: {
+    position: 'absolute',
+    bottom: -10, // Adjust position as needed
+    right: 605,
+    fontSize: 18,
+    color: 'gray',
   },
 
 
