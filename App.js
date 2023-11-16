@@ -14,6 +14,8 @@ export default function App() {
   const [playCount, setPlayCount] = useState(0);
   const gameResetTimeout = useRef(null);
   const [winCount, setWinCount] = useState(0);
+  const [lastTouch, setLastTouch] = useState(0);
+
 
   async function playSound(soundFile) {
     const { sound } = await Audio.Sound.createAsync(
@@ -154,11 +156,22 @@ export default function App() {
   return (
     <>
     <StatusBar hidden={true} />
-    <TouchableOpacity style={styles.container} onPress={() => {
-    if (gameState === 'playing') {
-      stopClock();
+    <TouchableOpacity 
+  style={styles.container} 
+  onPress={() => {
+    const now = Date.now();
+    if (now - lastTouch > 4000) { // Debounce period of 500 milliseconds
+      setLastTouch(now);
+
+      if (gameState === 'playing') {
+        stopClock();
+      } else {
+        startGame();
+      }
     }
-  }} activeOpacity={1}>
+  }} 
+  activeOpacity={1}
+>
     <ImageBackground source={backgroundImage} style={styles.backgroundImage}>
       
       {/* Message container at the top */}
@@ -193,11 +206,6 @@ export default function App() {
         <Animated.Text style={[styles.clock, { opacity: clockOpacity }]}>
           {formatTime(time)}
         </Animated.Text>
-      )}
-      {gameState !== 'playing' && (
-        <TouchableOpacity onPress={startGame} style={styles.button}>
-          <Text style={styles.buttonText}>Play</Text>
-        </TouchableOpacity>
       )}
     </>
   )}
