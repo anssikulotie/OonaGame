@@ -159,6 +159,7 @@ export default function App() {
   //define the resetPlayCount function to reset the playCount counter
   const resetPlayCount = () => {
     setPlayCount(0);
+    setWinCount(0);
   };
   
   //define the return function to return the JSX code
@@ -198,7 +199,7 @@ export default function App() {
 
       {/* Reset counter button */}
       <TouchableOpacity onPress={resetPlayCount} style={styles.counterResetButton}>
-      <Text style={styles.resetButtonText}>Reset{"\n"}Counter</Text>
+      <Text style={styles.resetButtonText}>Reset{"\n"}Counters</Text>
       </TouchableOpacity>
     </>
   )}
