@@ -116,11 +116,11 @@ export default function App() {
     setTimerOn(false);
   
     // Check if the time is within the hidden tolerance range
-    if (time >= 13.95 && time <= 14.05) {
+    if (time >= 14.95 && time <= 15.05) {
       setGameState('won');
       updateWinCount(winCount + 1);
       await playSound(require('./assets/sounds/winSound.mp3'));
-      setTime(14.00); // Display 14:00 regardless of actual stop time
+      setTime(15.00); // Display 15:00 regardless of actual stop time
     } else {
       setGameState('lost');
       await playSound(require('./assets/sounds/loseSound.mp3'));
@@ -225,7 +225,7 @@ export default function App() {
       {/* Message container at the bottom, containing the main objective */}
       
         <View style={styles.messageContainerBottom}>
-          <Text style={styles.messageguide}>Tap the Screen to stop the Timer at 14:00!</Text>
+          <Text style={styles.messageguide}>Tap the Screen to stop the Timer at 15:00!</Text>
         </View>
       
 

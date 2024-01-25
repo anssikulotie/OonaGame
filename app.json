@@ -28,7 +28,9 @@
       "favicon": "./assets/icon.png"
     },
     "extra": {
-  
+      "eas": {
+        "projectId": 
+    }
   }
 }
 }
