@@ -17,3 +17,7 @@ OonaGame is a React Native mobile app game where players are tasked with stoppin
 - Wait for the 3-second countdown.
 - Tap the screen to stop the timer as close to 14:00 as possible.
 - Watch for the win or loss message and challenge yourself again!
+
+  
+## Usage of the game
+- The game is developed by Anssi Kulotie for the use of Aava Mobile Oy, to be used as presentation material/activity. 
